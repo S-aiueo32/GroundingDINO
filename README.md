@@ -116,48 +116,20 @@ Marrying <a href="https://github.com/IDEA-Research/GroundingDINO">Grounding DINO
 
 ## :hammer_and_wrench: Install 
 
-**Note:**
+Requires Python 3.10+, PyTorch >=2.5,<3, and a C++17 compiler.
+Multi-scale deformable attention uses
+[torch-ms-deform-attn](https://pypi.org/project/torch-ms-deform-attn/).
+GroundingDINO no longer builds its own `groundingdino._C` extension.
+The dependency builds native CPU/CUDA kernels; MPS uses the PyTorch reference implementation.
 
-0. If you have a CUDA environment, please make sure the environment variable `CUDA_HOME` is set. It will be compiled under CPU-only mode if no CUDA available.
+Install PyTorch for your target CPU/CUDA environment first. CUDA builds require a
+matching CUDA toolkit and `CUDA_HOME`. When building without a visible GPU (for
+example in Docker), set `FORCE_CUDA=1` and `TORCH_CUDA_ARCH_LIST` for your GPUs.
+Rebuild `torch-ms-deform-attn` after changing PyTorch versions.
 
-Please make sure following the installation steps strictly, otherwise the program may produce: 
-```bash
-NameError: name '_C' is not defined
-```
+The optional `environment.yaml` creates a Python 3.11 / PyTorch 2.5.1 / CUDA 12.4
+Conda environment for Linux/Windows. After activating it, run step 3 below.
 
-If this happened, please reinstalled the groundingDINO by reclone the git and do all the installation steps again.
- 
-#### how to check cuda:
-```bash
-echo $CUDA_HOME
-```
-If it print nothing, then it means you haven't set up the path/
-
-Run this so the environment variable will be set under current shell. 
-```bash
-export CUDA_HOME=/path/to/cuda-11.3
-```
-
-Notice the version of cuda should be aligned with your CUDA runtime, for there might exists multiple cuda at the same time. 
-
-If you want to set the CUDA_HOME permanently, store it using:
-
-```bash
-echo 'export CUDA_HOME=/path/to/cuda' >> ~/.bashrc
-```
-after that, source the bashrc file and check CUDA_HOME:
-```bash
-source ~/.bashrc
-echo $CUDA_HOME
-```
-
-In this example, /path/to/cuda-11.3 should be replaced with the path where your CUDA toolkit is installed. You can find this by typing **which nvcc** in your terminal:
-
-For instance, 
-if the output is /usr/local/cuda/bin/nvcc, then:
-```bash
-export CUDA_HOME=/usr/local/cuda
-```
 **Installation:**
 
 1.Clone the GroundingDINO repository from GitHub.
@@ -175,7 +147,9 @@ cd GroundingDINO/
 3. Install the required dependencies in the current directory.
 
 ```bash
-pip install -e .
+python -m pip install 'torch>=2.5,<3' 'setuptools>=77' 'packaging>=24.2' wheel ninja
+python -m pip install --no-build-isolation 'torch-ms-deform-attn'
+python -m pip install -e .
 ```
 
 4. Download pre-trained model weights.

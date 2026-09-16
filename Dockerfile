@@ -1,9 +1,8 @@
-FROM pytorch/pytorch:2.1.2-cuda12.1-cudnn8-runtime
+FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-devel
 ARG DEBIAN_FRONTEND=noninteractive
 
 ENV CUDA_HOME=/usr/local/cuda \
-     TORCH_CUDA_ARCH_LIST="6.0 6.1 7.0 7.5 8.0 8.6+PTX" \
-     SETUPTOOLS_USE_DISTUTILS=stdlib
+     TORCH_CUDA_ARCH_LIST="6.0 6.1 7.0 7.5 8.0 8.6+PTX"
 
 RUN conda update conda -y
 
@@ -19,16 +18,13 @@ RUN apt-get -y update && apt-get install -y --no-install-recommends \
 # Set the working directory for all the subsequent Dockerfile instructions.
 WORKDIR /opt/program
 
-RUN git clone https://github.com/IDEA-Research/GroundingDINO.git
+COPY . GroundingDINO/
 
 RUN mkdir weights ; cd weights ; wget -q https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth ; cd ..
 
-RUN conda install -c "nvidia/label/cuda-12.1.1" cuda -y
-ENV CUDA_HOME=$CONDA_PREFIX
-
-ENV PATH=/usr/local/cuda/bin:$PATH
-
-RUN cd GroundingDINO/ && python -m pip install .
+RUN python -m pip install 'setuptools>=77' 'packaging>=24.2' wheel ninja
+RUN FORCE_CUDA=1 python -m pip install --no-build-isolation 'torch-ms-deform-attn'
+RUN python -m pip install ./GroundingDINO
 
 COPY docker_test.py docker_test.py
 
