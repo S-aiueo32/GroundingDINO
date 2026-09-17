@@ -231,25 +231,19 @@ class MultiScaleDeformableAttention(nn.Module):
             )
 
         output_dtype = value.dtype
-        if value.device.type == "mps":
-            # The reference backend has no native low-precision handling.
-            output = multi_scale_deformable_attn_pytorch(
-                value.float(), spatial_shapes, sampling_locations.float(), attention_weights.float()
-            )
-        else:
-            # Match floating input dtypes without narrowing FP32 reference coordinates.
-            # torch-ms-deform-attn handles low-precision accumulation and autocast.
-            dtype = torch.promote_types(
-                torch.promote_types(value.dtype, sampling_locations.dtype), attention_weights.dtype
-            )
-            output = ms_deform_attn(
-                value.to(dtype),
-                spatial_shapes,
-                level_start_index,
-                sampling_locations.to(dtype),
-                attention_weights.to(dtype),
-                self.im2col_step,
-            )
+        # Match floating input dtypes without narrowing FP32 reference coordinates.
+        # torch-ms-deform-attn handles low-precision accumulation and autocast.
+        dtype = torch.promote_types(
+            torch.promote_types(value.dtype, sampling_locations.dtype), attention_weights.dtype
+        )
+        output = ms_deform_attn(
+            value.to(dtype),
+            spatial_shapes,
+            level_start_index,
+            sampling_locations.to(dtype),
+            attention_weights.to(dtype),
+            self.im2col_step,
+        )
         output = output.to(output_dtype)
 
         output = self.output_proj(output)
